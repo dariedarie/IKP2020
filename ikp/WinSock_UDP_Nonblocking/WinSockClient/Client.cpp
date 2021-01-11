@@ -19,41 +19,41 @@
 // Returns true if succeeded, false otherwise.
 bool InitializeWindowsSockets();
 
-int main(int argc,char* argv[])
+int main(int argc, char* argv[])
 {
-    // Server address
-    sockaddr_in serverAddress;
-    // size of sockaddr structure    
+	// Server address
+	sockaddr_in serverAddress;
+	// size of sockaddr structure    
 	int sockAddrLen = sizeof(struct sockaddr);
 	// buffer we will use to store message
-    char outgoingBuffer[OUTGOING_BUFFER_SIZE];
+	char outgoingBuffer[OUTGOING_BUFFER_SIZE];
 	char rcvBuffer[ACCESS_BUFFER_SIZE];
-    // port used for communication with server
-    int serverPort = SERVER_PORT;
+	// port used for communication with server
+	int serverPort = SERVER_PORT;
 	// variable used to store function return value
 	int iResult;
 
-    // Initialize windows sockets for this process
-    InitializeWindowsSockets();
+	// Initialize windows sockets for this process
+	InitializeWindowsSockets();
 
-    // Initialize serverAddress structure
-    memset((char*)&serverAddress,0,sizeof(serverAddress));
-    serverAddress.sin_family = AF_INET;
-    serverAddress.sin_addr.s_addr = inet_addr(SERVER_IP_ADDERESS);
-    serverAddress.sin_port = htons((u_short)serverPort);
+	// Initialize serverAddress structure
+	memset((char*)&serverAddress, 0, sizeof(serverAddress));
+	serverAddress.sin_family = AF_INET;
+	serverAddress.sin_addr.s_addr = inet_addr(SERVER_IP_ADDERESS);
+	serverAddress.sin_port = htons((u_short)serverPort);
 
 	// create a socket
-    SOCKET clientSocket = socket(AF_INET,      // IPv4 address famly
-								 SOCK_DGRAM,   // datagram socket
-								 IPPROTO_UDP); // UDP
+	SOCKET clientSocket = socket(AF_INET,      // IPv4 address famly
+		SOCK_DGRAM,   // datagram socket
+		IPPROTO_UDP); // UDP
 
-    // check if socket creation succeeded
-    if (clientSocket == INVALID_SOCKET)
-    {
-        printf("Creating socket failed with error: %d\n", WSAGetLastError());
-        WSACleanup();
-        return 1;
-    }
+// check if socket creation succeeded
+	if (clientSocket == INVALID_SOCKET)
+	{
+		printf("Creating socket failed with error: %d\n", WSAGetLastError());
+		WSACleanup();
+		return 1;
+	}
 
 	// inicijalna sirina prozora
 	int windowSize = 10;
@@ -67,27 +67,27 @@ int main(int argc,char* argv[])
 	int alreadyReadAll = 0;
 	// nepotrebno
 	int advertisedWindowSize = 256;
-	
+
 	int bufferSizeOffset = 0;
 
-	 char c;
+	char c;
 
 
 	SendingWindow sendingWindow;
 	// inicijalizacija prozora
 	createNew(&sendingWindow, windowSize);
 
-	 
+
 	int repeatEnd, repeatStart;
 	int paramSend = 0;
 	int iterator = 0;
 	int SSTresh = 0;
 	bool dozvola = false;
-	
+
 
 
 	while (1) {
-		
+
 		LAR(sendingWindow) = 0;
 		LFS(sendingWindow) = 0;
 		paramSend = 0;
@@ -176,9 +176,12 @@ int main(int argc,char* argv[])
 				char* acksegment = (char *)&ack;
 				if (recvfrom(clientSocket, acksegment, sizeof(ack), 0, (LPSOCKADDR)&serverAddress, &sockAddrLen) >= 0) {
 					// pomeramo sending window tako da prvi sledeci segment koji se salje bude onaj koji nema potvrdu da je stigao na server
+					/*if (NextSequenceNumber(ack) == -1) {
+						continue;
+					}*/
 					LAR(sendingWindow) = NextSequenceNumber(ack);
-					
-					printf("VRACAS:%d\n",NextSequenceNumber(ack));
+
+					printf("VRACAS:%d\n", NextSequenceNumber(ack));
 					char ipAddress[IP_ADDRESS_LEN];
 					strcpy_s(ipAddress, sizeof(ipAddress), inet_ntoa(serverAddress.sin_addr));
 					int serverPort = ntohs((u_short)serverAddress.sin_port);
@@ -192,14 +195,14 @@ int main(int argc,char* argv[])
 
 			int paramX = 12;
 			float temp = 0;
-			
-			
+
+
 			if (LAR(sendingWindow) > strlen(outgoingBuffer) - 1) {
 				printf("Poslao sam celu poruku\n");
 				strcpy(outgoingBuffer, "");
 				if (SSTresh != windowSize)
 				{
-					if(dozvola == false)
+					if (dozvola == false)
 					{
 						if (windowSize == paramX)
 						{
@@ -212,7 +215,7 @@ int main(int argc,char* argv[])
 						{
 							windowSize++;
 						}
-					
+
 					}
 					else
 					{
@@ -221,34 +224,39 @@ int main(int argc,char* argv[])
 						windowSize += temp3;
 						dozvola = true;
 					}
-						
-				   
+
+
 				}
 				else
 				{
-					temp = (float)(SSTresh) + ((float)SSTresh / (float)windowSize);
+					temp = (float)(SSTresh)+((float)SSTresh / (float)windowSize);
 					int temp2 = round(temp);
 					windowSize += temp2;
 					dozvola = true;
 				}
-				
+
 				break;
-			} 
+			}
 		}
 
 		//SERVER NE MOZE UNAPRED DA ZNA KOLIKU MU PORUKU KLIJENT SALJE
 		//KADA SE IZADJE IZ OVE WHILE PETLJE POSLACEMO PORUKU SERVERU KOJA CE DA OZNACAVA KRAJ SLANJA TRENUTNE PORUKE
 		//TA ZADNJA PORUKA IMACE DRUGACIJI FLAG 'SOH' OD NORMALNIH PORUKA
 		//PO TOME CE SERVER ZNATI DA TREBA DA OCEKUJE NOVU PORUKU (URADICE 'BRAKE')
-		
+
 		PacketACK finalACK;
 		NextSequenceNumber(finalACK) = 0;
 		Segment finalSegment;
-		finalSegment = CreateSegment(0,0,0);
+		finalSegment = CreateSegment(-1, 0, 0);
 		EOM(finalSegment) = 0x2;
 		while (NextSequenceNumber(finalACK) == 0) {
-			
+
+			if (NextSequenceNumber(finalACK) == -1) {
+				break;
+			}
+
 			// salji poruku dok ne dobijes potvrdu da je stigla na server
+
 			char* fsegment = (char *)&finalSegment;
 
 			sendto(clientSocket, fsegment, sizeof(finalSegment), 0, (struct sockaddr *) &serverAddress, sockAddrLen);
@@ -263,32 +271,32 @@ int main(int argc,char* argv[])
 	//printf("Message sent to server, press any key to exit.\n");
 	//_getch();
 
-    iResult = closesocket(clientSocket);
-    if (iResult == SOCKET_ERROR)
-    {
-        printf("closesocket failed with error: %d\n", WSAGetLastError());
-        return 1;
-    }
+	iResult = closesocket(clientSocket);
+	if (iResult == SOCKET_ERROR)
+	{
+		printf("closesocket failed with error: %d\n", WSAGetLastError());
+		return 1;
+	}
 
-    iResult = WSACleanup();
-    if (iResult == SOCKET_ERROR)
-    {
-        printf("WSACleanup failed with error: %ld\n", WSAGetLastError());
-        return 1;
-    }
+	iResult = WSACleanup();
+	if (iResult == SOCKET_ERROR)
+	{
+		printf("WSACleanup failed with error: %ld\n", WSAGetLastError());
+		return 1;
+	}
 
-    return 0;
+	return 0;
 }
 
 bool InitializeWindowsSockets()
 {
-    WSADATA wsaData;
+	WSADATA wsaData;
 	// Initialize windows sockets library for this process
-    int iResult = WSAStartup(MAKEWORD(2,2), &wsaData);
-    if (iResult != 0)
-    {
-        printf("WSAStartup failed with error: %d\n", iResult);
-        return false;
-    }
+	int iResult = WSAStartup(MAKEWORD(2, 2), &wsaData);
+	if (iResult != 0)
+	{
+		printf("WSAStartup failed with error: %d\n", iResult);
+		return false;
+	}
 	return true;
 }

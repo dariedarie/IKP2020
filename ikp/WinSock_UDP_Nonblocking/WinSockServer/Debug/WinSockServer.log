@@ -1,1 +1,7 @@
-﻿
+﻿  Server.cpp
+c:\users\colak\desktop\ikp\ikp2020\ikp\winsock_udp_nonblocking\winsockserver\server.cpp(178): warning C4996: 'inet_ntoa': Use inet_ntop() or InetNtop() instead or define _WINSOCK_DEPRECATED_NO_WARNINGS to disable deprecated API warnings
+  c:\program files (x86)\windows kits\10\include\10.0.17763.0\um\winsock2.h(1849): note: see declaration of 'inet_ntoa'
+c:\users\colak\desktop\ikp\ikp2020\ikp\winsock_udp_nonblocking\winsockserver\server.cpp(85): warning C4101: 'recv_len': unreferenced local variable
+c:\users\colak\desktop\ikp\ikp2020\ikp\winsock_udp_nonblocking\winsockserver\server.cpp(29): warning C4101: 'sendBuffer': unreferenced local variable
+c:\users\colak\desktop\ikp\ikp2020\ikp\winsock_udp_nonblocking\winsockserver\server.cpp(27): warning C4101: 'alreadyReceived': unreferenced local variable
+  WinSockServer.vcxproj -> C:\Users\colak\Desktop\ikp\IKP2020\ikp\WinSock_UDP_Nonblocking\Debug\WinSockServer.exe
