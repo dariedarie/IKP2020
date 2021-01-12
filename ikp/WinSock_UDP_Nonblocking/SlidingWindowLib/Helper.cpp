@@ -1,4 +1,5 @@
 #include "Helper.h"
+#include "Frame.h"
 
   
 Segment CreateSegment(int inputSequenceNumber, char inputData[SIZE_OF_SEGMENT], char inputChecksum) {
@@ -15,6 +16,12 @@ PacketACK CreatePacketACK(int inputNextSequenceNumber) {
 	ACK(P) = DefaultACK;
 	NextSequenceNumber(P) = inputNextSequenceNumber;
 	return P;
+}
+
+void createNew(SendingWindow *s, int windowSize) {
+	s->sendingWindowSize = windowSize;
+	s->lastAckReceived = NONE;
+	s->lastFrameSent = NONE;
 }
 
 Control CalculateWinSize(int windowSize,int SSTresh, bool dozvola)

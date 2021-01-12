@@ -3,8 +3,6 @@
 #include <conio.h>
 #include <math.h>
 #include <stdlib.h>
-#include "Frame.h"
-#include "Helper.h"
 #include "Helper.cpp"
 
 #define SERVER_PORT 15000
