@@ -14,6 +14,9 @@
 // local host ip adderss
 #define SERVER_IP_ADDERESS "127.0.0.1"
 #define IP_ADDRESS_LEN 16
+#define START_WINDOW_SIZE 10
+#define ADVERTISED_WINDOW_SIZE 256
+#define SEGMENT_SIZE 4
 
 // Initializes WinSock2 library
 // Returns true if succeeded, false otherwise.
@@ -56,16 +59,9 @@ int main(int argc, char* argv[])
 	}
 
 	// inicijalna sirina prozora
-	int windowSize = 10;
+	int windowSize = START_WINDOW_SIZE;
 	Segment paket;
 	PacketACK ack;
-	// valjda da se odredi sirina buffera dok se cita fajl
-	int counterBuffer = 0;
-	// ovo valjda broji segmente
-	int counterSequence = 0;
-	// isto nesto za fajl
-	int alreadyReadAll = 0;
-	// nepotrebno
 	int advertisedWindowSize = 256;
 
 	int bufferSizeOffset = 0;
@@ -80,10 +76,8 @@ int main(int argc, char* argv[])
 
 	int repeatEnd, repeatStart;
 	int paramSend = 0;
-	int iterator = 0;
 	int SSTresh = 0;
 	bool dozvola = false;
-
 
 
 	while (1) {
@@ -95,32 +89,65 @@ int main(int argc, char* argv[])
 		repeatEnd = LFS(sendingWindow);
 
 		printf("Enter message to server:\n");
-		printf("Size window:%d\n", windowSize);
+		printf("Size of window: %d\n", windowSize);
 		// Read string from user into outgoing buffer
 		gets_s(outgoingBuffer, OUTGOING_BUFFER_SIZE);
 		while (1) {
 
 
-			//				zadnji segment za koji je stigao ack (trenutno 0)
+			
 			repeatStart = LAR(sendingWindow);
-			//			zadnji segment koji smo poslali (trenutno 0)
 			repeatEnd = LFS(sendingWindow);
-
-			// povecava se za 1 nakon svakog slanja segmenta
-			// kad se prodje ceo while vraca se na 0
 			paramSend = 0;
 
-			//dok je zadnji potvrdjen segment blizu zadnjeg poslatog (razlika manja od sirine prozora)
-			//dok nismo dosli do kraja buffera 
-			while (LFS(sendingWindow) < LAR(sendingWindow) + windowSize && LFS(sendingWindow) < strlen(outgoingBuffer) && paramSend < advertisedWindowSize) {
+			int num_of_segments = 0;
+			if (strlen(outgoingBuffer) < SEGMENT_SIZE) {
+				num_of_segments = 1;
+			}
+			if (strlen(outgoingBuffer) % 4 == 0) {
+				num_of_segments = strlen(outgoingBuffer) / 4;
+			}
+			else {
+				num_of_segments = strlen(outgoingBuffer) / 4 + 1;
+			}
 
-				// paket ce imati podatke duzine 1 char
-				paket = CreateSegment(LFS(sendingWindow), outgoingBuffer[LFS(sendingWindow)], 0);
-				// ovo nam nece trebati
-				// pomeri LFS za jedno mesto u napred (jer frejm koji smo napravili postaje lfs)
+			printf("Number of segments to send: %d\n", num_of_segments);
+
+			int num_of_bytes_left = strlen(outgoingBuffer);
+
+			
+			while (LFS(sendingWindow) < LAR(sendingWindow) + windowSize && LFS(sendingWindow) < num_of_segments && paramSend < advertisedWindowSize) {
+
+				int bytes_to_transfer;
+				if (num_of_bytes_left >= SEGMENT_SIZE) {
+					bytes_to_transfer = SEGMENT_SIZE;
+				}
+				else {
+					bytes_to_transfer = num_of_bytes_left;
+				}
+
+
+				num_of_bytes_left -= bytes_to_transfer;
+
+				char* temp = (char*)malloc(bytes_to_transfer * sizeof(char));
+
+				if (num_of_bytes_left >= 0) {
+					memcpy(temp, outgoingBuffer + LFS(sendingWindow) * SEGMENT_SIZE, bytes_to_transfer);
+				}
+
+
+				memset(Data(paket), 0, SEGMENT_SIZE);
+				printf("Saljem na server: ");
+
+
+				for (int j = 0; j < bytes_to_transfer; j++) {
+					printf("%c", temp[j]);
+				}
+				printf("\n");
+				paket = CreateSegment(LFS(sendingWindow), temp, 0);
+				
 				LFS(sendingWindow) = LFS(sendingWindow) + 1;
 				char* segment = (char *)&paket;
-
 
 				iResult = sendto(clientSocket,
 					segment,
@@ -143,10 +170,12 @@ int main(int argc, char* argv[])
 
 
 			int i;
-			// posalji sve pakete za koje nije stigao ack
-			// iterira se od LAR do LFS 
 			for (i = repeatStart; i < repeatEnd; i++) {
-				paket = CreateSegment(i, outgoingBuffer[i], 0);
+				char temp[SEGMENT_SIZE];
+				for (int i = 0; i < SEGMENT_SIZE; i++) {
+					temp[i] = outgoingBuffer[LFS(sendingWindow)*SEGMENT_SIZE + i];
+				}
+				paket = CreateSegment(i, temp, 0);
 				char* segment = (char *)&paket;
 
 				iResult = sendto(clientSocket,
@@ -156,7 +185,7 @@ int main(int argc, char* argv[])
 					(LPSOCKADDR)&serverAddress,
 					sockAddrLen);
 
-				printf("Poslao sam opet");
+				printf("Poslao sam opet\n");
 
 				if (iResult == SOCKET_ERROR)
 				{
@@ -172,16 +201,10 @@ int main(int argc, char* argv[])
 
 
 			for (i = 0; i < paramSend; i++) {
-				//printf("FOR PETLJA\n PARAM SEND: %d\n", paramSend);
 				char* acksegment = (char *)&ack;
 				if (recvfrom(clientSocket, acksegment, sizeof(ack), 0, (LPSOCKADDR)&serverAddress, &sockAddrLen) >= 0) {
-					// pomeramo sending window tako da prvi sledeci segment koji se salje bude onaj koji nema potvrdu da je stigao na server
-					/*if (NextSequenceNumber(ack) == -1) {
-						continue;
-					}*/
 					LAR(sendingWindow) = NextSequenceNumber(ack);
 
-					printf("VRACAS:%d\n", NextSequenceNumber(ack));
 					char ipAddress[IP_ADDRESS_LEN];
 					strcpy_s(ipAddress, sizeof(ipAddress), inet_ntoa(serverAddress.sin_addr));
 					int serverPort = ntohs((u_short)serverAddress.sin_port);
@@ -193,69 +216,34 @@ int main(int argc, char* argv[])
 			}
 
 
-			int paramX = 12;
-			float temp = 0;
+		
 
 
-			if (LAR(sendingWindow) > strlen(outgoingBuffer) - 1) {
+			if (LAR(sendingWindow) > num_of_segments - 1) {
 				printf("Poslao sam celu poruku\n");
 				strcpy(outgoingBuffer, "");
-				if (SSTresh != windowSize)
-				{
-					if (dozvola == false)
-					{
-						if (windowSize == paramX)
-						{
-							SSTresh += windowSize / 2;
-							printf("\nSSTresh: %d\n", SSTresh);
-							windowSize = 10;
-
-						}
-						else
-						{
-							windowSize++;
-						}
-
-					}
-					else
-					{
-						temp = (float)(SSTresh)+((float)SSTresh / (float)windowSize);
-						int temp3 = round(temp);
-						windowSize += temp3;
-						dozvola = true;
-					}
-
-
-				}
-				else
-				{
-					temp = (float)(SSTresh)+((float)SSTresh / (float)windowSize);
-					int temp2 = round(temp);
-					windowSize += temp2;
-					dozvola = true;
-				}
+				Control c;
+				c = CalculateWinSize(windowSize, SSTresh,dozvola);
+				windowSize = c.windowSize;
+				SSTresh = c.SSTresh;
+				dozvola = c.dozvola;
 
 				break;
 			}
 		}
 
-		//SERVER NE MOZE UNAPRED DA ZNA KOLIKU MU PORUKU KLIJENT SALJE
-		//KADA SE IZADJE IZ OVE WHILE PETLJE POSLACEMO PORUKU SERVERU KOJA CE DA OZNACAVA KRAJ SLANJA TRENUTNE PORUKE
-		//TA ZADNJA PORUKA IMACE DRUGACIJI FLAG 'SOH' OD NORMALNIH PORUKA
-		//PO TOME CE SERVER ZNATI DA TREBA DA OCEKUJE NOVU PORUKU (URADICE 'BRAKE')
 
 		PacketACK finalACK;
 		NextSequenceNumber(finalACK) = 0;
 		Segment finalSegment;
-		finalSegment = CreateSegment(-1, 0, 0);
+		char final_message[4] = { 0,0,0,0 };
+		finalSegment = CreateSegment(-1, final_message, 0);
 		EOM(finalSegment) = 0x2;
 		while (NextSequenceNumber(finalACK) == 0) {
 
 			if (NextSequenceNumber(finalACK) == -1) {
 				break;
 			}
-
-			// salji poruku dok ne dobijes potvrdu da je stigla na server
 
 			char* fsegment = (char *)&finalSegment;
 

@@ -1,1 +1,5 @@
-﻿
+﻿  Helper.cpp
+c:\users\colak\desktop\ikp\ikp2020\ikp\winsock_udp_nonblocking\slidingwindowlib\helper.cpp(36): warning C4477: 'printf' : format string '%d' requires an argument of type 'int', but variadic argument 1 has type 'int *'
+c:\users\colak\desktop\ikp\ikp2020\ikp\winsock_udp_nonblocking\slidingwindowlib\helper.cpp(49): warning C4244: 'initializing': conversion from 'float' to 'int', possible loss of data
+c:\users\colak\desktop\ikp\ikp2020\ikp\winsock_udp_nonblocking\slidingwindowlib\helper.cpp(59): warning C4244: 'initializing': conversion from 'float' to 'int', possible loss of data
+  SlidingWindowLib.vcxproj -> C:\Users\colak\Desktop\ikp\IKP2020\ikp\WinSock_UDP_Nonblocking\Debug\SlidingWindowLib.lib

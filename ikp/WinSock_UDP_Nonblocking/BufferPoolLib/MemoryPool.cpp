@@ -1,5 +1,3 @@
-#include <string.h>
-#include <stdlib.h>
 #include "MemoryPool.h"
 
 POOL * pool_create(size_t size) {

@@ -8,6 +8,8 @@
 #define ACCESS_BUFFER_SIZE 1024
 #define IP_ADDRESS_LEN 16
 #define BUFFER_POOL_SIZE 10000
+#define START_WINDOW_SIZE 10
+#define SEGMENT_SIZE 4
 
 
 // Initializes WinSock2 library
@@ -23,7 +25,7 @@ int main(int argc, char* argv[])
 	// size of sockaddr structure
 	int sockAddrLen = sizeof(struct sockaddr);
 	// buffer we will use to receive client message
-	char accessBuffer[ACCESS_BUFFER_SIZE];
+	char accessBuffer[SEGMENT_SIZE];
 	bool alreadyReceived[ACCESS_BUFFER_SIZE];
 
 	char sendBuffer[ACCESS_BUFFER_SIZE];
@@ -81,15 +83,15 @@ int main(int argc, char* argv[])
 
 	printf("Simple UDP server started and waiting clients.\n");
 
-	int windowSize = 10;
+
+
+	int windowSize = START_WINDOW_SIZE;
 	int recv_len;
 	Segment paket;
 	PacketACK ack;
 	int lastFrameCorrect = 0;
-	// poslednji primljen frejm
 	int LFR = 0;
 	bool first = true;
-	// poslednji frejm za koji je poslat ack
 	int LAF = windowSize;
 	int counterBuffer = 0;
 	int finish = 0;
@@ -103,7 +105,7 @@ int main(int argc, char* argv[])
 		memset(&clientAddress, 0, sizeof(sockaddr_in));
 
 		// set whole buffer to zero
-		memset(accessBuffer, 0, ACCESS_BUFFER_SIZE);
+		memset(accessBuffer, 0, SEGMENT_SIZE);
 
 		// Initialize select parameters
 		FD_SET set;
@@ -149,37 +151,32 @@ int main(int argc, char* argv[])
 				break;
 			}
 
+			memset(Data(paket), 0, SEGMENT_SIZE);
 			char * recvBuf = (char *)&paket;
 			if (recvfrom(serverSocket, recvBuf, sizeof(paket), 0, (LPSOCKADDR)&clientAddress, &sockAddrLen) >= 0) {
 				if (EOM(paket) == 0x02) {
 					ack = CreatePacketACK(-1);
 					char *sendBuf = (char *)&ack;
-					printf("VRACAS:%d\n", NextSequenceNumber(ack));
 					iResult = sendto(serverSocket, sendBuf, sizeof(ack), 0, (LPSOCKADDR)&clientAddress, sockAddrLen);
 					printf("Klijent je zavrsio slanje svoje poruke\n");
 					neki_brojac = 0;
-					//finish = 0;
 					break;
 				}
-				printf("Stigao je paket sa seq_num: %d\n", SequenceNumber(paket));
-				// ako je pristigli paket unutar prozora	
+				printf("Stigao je paket sa seq_num: %d\n", SequenceNumber(paket));	
 				if (SequenceNumber(paket) >= LFR && SequenceNumber(paket) <= LAF) {
-					//printf("USAO SAM U PRVI IF\n");
+					
 					if (SequenceNumber(paket) == LFR) {
 						LFR++;
-						//printf("USAO SAM U DRUGI IF\n");
-						accessBuffer[SequenceNumber(paket)] = Data(paket);
-						//counterBuffer++;
+						
+						char *mem = (char*)pool_alloc(buffer_pool, SEGMENT_SIZE);
 
-						char* mem = (char*)pool_alloc(buffer_pool, sizeof(char));
-						mem[0] = Data(paket);
+						strcpy(mem, Data(paket));
 
 						char ipAddress[IP_ADDRESS_LEN];
 						strcpy_s(ipAddress, sizeof(ipAddress), inet_ntoa(clientAddress.sin_addr));
-						// copy client ip to local char[]
 						int clientPort = ntohs((u_short)clientAddress.sin_port);
 
-						printf("Client connected from ip: %s, port: %d, sent: %c\n", ipAddress, clientPort, Data(paket));
+						printf("Client connected from ip: %s, port: %d, sent: %c%c%c%c\n", ipAddress, clientPort, Data(paket)[0], Data(paket)[1], Data(paket)[2], Data(paket)[3]);
 						printf("BUFFER POOL:");
 						for (char *c = buffer_pool->begin; c != buffer_pool->next; c++)
 						{
@@ -193,26 +190,14 @@ int main(int argc, char* argv[])
 
 			}
 
-
-
-
-
-
-
-
 			ack = CreatePacketACK(LFR);
 			char *sendBuf = (char *)&ack;
-			//printf("NNIJE ZADNJI SEGMENT VRACAS:%d\n", NextSequenceNumber(ack));
 			novi_ack = NextSequenceNumber(ack);
 			if (novi_ack != stari_ack) {
 
-				printf("NNIJE ZADNJI SEGMENT VRACAS:%d\n", NextSequenceNumber(ack));
 				iResult = sendto(serverSocket, sendBuf, sizeof(ack), 0, (LPSOCKADDR)&clientAddress, sockAddrLen);
 			}
 			stari_ack = NextSequenceNumber(ack);
-
-
-
 
 		}
 
@@ -242,10 +227,11 @@ int main(int argc, char* argv[])
 		return 1;
 	}
 
+	pool_destroy(buffer_pool);
 	printf("Server successfully shut down.\n");
 	return 0;
 
-	pool_destroy(buffer_pool);
+	
 }
 
 bool InitializeWindowsSockets()
