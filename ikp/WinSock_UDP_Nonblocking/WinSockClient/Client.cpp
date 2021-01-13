@@ -55,24 +55,26 @@ int main(int argc, char* argv[])
 	}
 
 	// funkcija koja obavlja svu klijentsku logiku
-	startSending(outgoingBuffer, clientSocket, &serverAddress, &sockAddrLen);
-
-
-	iResult = closesocket(clientSocket);
-	if (iResult == SOCKET_ERROR)
+	if(startSending(outgoingBuffer, clientSocket, &serverAddress, &sockAddrLen)==200)
 	{
-		printf("closesocket failed with error: %d\n", WSAGetLastError());
-		return 1;
+		iResult = closesocket(clientSocket);
+		if (iResult == SOCKET_ERROR)
+		{
+			printf("closesocket failed with error: %d\n", WSAGetLastError());
+			return 1;
+		}
+
+		iResult = WSACleanup();
+		if (iResult == SOCKET_ERROR)
+		{
+			printf("WSACleanup failed with error: %ld\n", WSAGetLastError());
+			return 1;
+		}
+
+		return 0;
 	}
 
-	iResult = WSACleanup();
-	if (iResult == SOCKET_ERROR)
-	{
-		printf("WSACleanup failed with error: %ld\n", WSAGetLastError());
-		return 1;
-	}
-
-	return 0;
+	
 }
 
 bool InitializeWindowsSockets()

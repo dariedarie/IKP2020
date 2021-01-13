@@ -1,5 +1,9 @@
 ﻿  Helper.cpp
 c:\users\colak\desktop\ikp\ikp2020\ikp\winsock_udp_nonblocking\slidingwindowlib\helper.cpp(50): warning C4244: 'initializing': conversion from 'float' to 'int', possible loss of data
 c:\users\colak\desktop\ikp\ikp2020\ikp\winsock_udp_nonblocking\slidingwindowlib\helper.cpp(58): warning C4244: 'initializing': conversion from 'float' to 'int', possible loss of data
-c:\users\colak\desktop\ikp\ikp2020\ikp\winsock_udp_nonblocking\slidingwindowlib\helper.cpp(320): error C4996: 'strcpy': This function or variable may be unsafe. Consider using strcpy_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+c:\users\colak\desktop\ikp\ikp2020\ikp\winsock_udp_nonblocking\slidingwindowlib\helper.cpp(73): error C4996: 'inet_ntoa': Use inet_ntop() or InetNtop() instead or define _WINSOCK_DEPRECATED_NO_WARNINGS to disable deprecated API warnings
+  c:\program files (x86)\windows kits\10\include\10.0.17763.0\um\winsock2.h(1849): note: see declaration of 'inet_ntoa'
+c:\users\colak\desktop\ikp\ikp2020\ikp\winsock_udp_nonblocking\slidingwindowlib\helper.cpp(169): error C4996: 'inet_ntoa': Use inet_ntop() or InetNtop() instead or define _WINSOCK_DEPRECATED_NO_WARNINGS to disable deprecated API warnings
+  c:\program files (x86)\windows kits\10\include\10.0.17763.0\um\winsock2.h(1849): note: see declaration of 'inet_ntoa'
+c:\users\colak\desktop\ikp\ikp2020\ikp\winsock_udp_nonblocking\slidingwindowlib\helper.cpp(315): error C4996: 'strcpy': This function or variable may be unsafe. Consider using strcpy_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
   c:\program files (x86)\windows kits\10\include\10.0.17763.0\ucrt\string.h(133): note: see declaration of 'strcpy'

@@ -24,6 +24,7 @@ void createNew(SendingWindow *s, int windowSize) {
 	s->lastFrameSent = NONE;
 }
 
+
 Control CalculateWinSize(int windowSize, int SSTresh, bool dozvola)
 {
 	float temp = 0;
@@ -324,6 +325,15 @@ int startSending(char* outgoingBuffer, SOCKET clientSocket, sockaddr_in *serverA
 
 
 		sendFinalSegment(clientSocket, serverAddress, sockAddrLen);
+		char negative[SHUT_DOWN_BUFFER];
+		printf("Zelite li da ugasite server(Y/N)?\n");
+		gets_s(negative, SHUT_DOWN_BUFFER);
+		if(strcmp(negative,"Y")==0)
+		{
+			sendto(clientSocket, negative, sizeof(SHUT_DOWN_BUFFER), 0, (struct sockaddr *) serverAddress, *sockAddrLen);
+			return 200;
+		}
+
 	}
 }
 

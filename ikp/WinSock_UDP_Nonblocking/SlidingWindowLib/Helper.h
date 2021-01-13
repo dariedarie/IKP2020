@@ -1,3 +1,4 @@
+#ifndef _HELPER_H_
 #define _HELPER_H_
 //MODULE AND DEFINE
 #include <string>
@@ -15,6 +16,7 @@
 #define IP_ADDRESS_LEN 16
 #define ADVERTISED_WINDOW_SIZE 256
 #define OUTGOING_BUFFER_SIZE 1024
+#define SHUT_DOWN_BUFFER 10
 #define INITIAL_NEXT_SEQUENCE_NUM -111
 #define _WINSOCK_DEPRECATED_NO_WARNINGS
 
@@ -83,3 +85,4 @@ void sendFinalSegment(SOCKET clientSocket, sockaddr_in *serverAddress, int *sock
 int startSending(char* outgoingBuffer, SOCKET clientSocket, sockaddr_in *serverAddress, int *sockAddrLen);
 
 PacketACK sendFinalAck(PacketACK ack, SOCKET serverSocket, sockaddr_in* clientAddress, int sockAddrLen);
+#endif

@@ -158,6 +158,32 @@ int main(int argc, char* argv[])
 					ack = sendFinalAck(ack, serverSocket, &clientAddress, sockAddrLen);
 					break;
 				}
+				else if(strcmp(recvBuf,"Y")==0)
+				{
+					pool_destroy(buffer_pool);
+					// if we are here, it means that server is shutting down
+					// close socket and unintialize WinSock2 library
+					iResult = closesocket(serverSocket);
+					if (iResult == SOCKET_ERROR)
+					{
+						printf("closesocket failed with error: %d\n", WSAGetLastError());
+						return 1;
+					}
+
+					iResult = WSACleanup();
+					if (iResult == SOCKET_ERROR)
+					{
+						printf("WSACleanup failed with error: %d\n", WSAGetLastError());
+						return 1;
+					}
+
+					printf("Server successfully shut down.\n");
+
+
+					return 0;
+				
+				}
+				
 
 				// ako je pristigli paket unutar prozora	
 				if (SequenceNumber(paket) >= LFR && SequenceNumber(paket) <= LAF) {
@@ -203,6 +229,8 @@ int main(int argc, char* argv[])
 
 	}
 
+
+	pool_destroy(buffer_pool);
 	// if we are here, it means that server is shutting down
 	// close socket and unintialize WinSock2 library
 	iResult = closesocket(serverSocket);
@@ -220,11 +248,9 @@ int main(int argc, char* argv[])
 	}
 
 	printf("Server successfully shut down.\n");
-	pool_destroy(buffer_pool);
+
 
 	return 0;
-
-
 }
 
 bool InitializeWindowsSockets()
