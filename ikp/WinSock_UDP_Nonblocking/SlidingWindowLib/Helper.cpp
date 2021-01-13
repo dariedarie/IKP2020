@@ -1,6 +1,5 @@
 #include "Helper.h"
-
-
+#include "Frame.h"
 
 Segment CreateSegment(int inputSequenceNumber, char inputData[SIZE_OF_SEGMENT], char inputChecksum) {
 	Segment S;
@@ -337,4 +336,3 @@ PacketACK sendFinalAck(PacketACK ack, SOCKET serverSocket, sockaddr_in* clientAd
 
 	return ack;
 }
-

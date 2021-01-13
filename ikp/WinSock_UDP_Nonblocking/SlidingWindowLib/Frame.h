@@ -1,4 +1,3 @@
-#ifndef FRAME_H
 #define FRAME_H
 
 typedef struct {
@@ -14,10 +13,3 @@ typedef struct {
 #define LFS(S) (S).lastFrameSent	
 
 void createNew(SendingWindow *s, int windowSize);
-
-/*void createNew(SendingWindow *s, int windowSize) {
-	s->sendingWindowSize = windowSize;
-	s->lastAckReceived = NONE;
-	s->lastFrameSent = NONE;
-}*/
-#endif

@@ -1,16 +1,5 @@
-#ifndef _HELPER_H_
 #define _HELPER_H_
-#define SIZE_OF_SEGMENT 4
-#define IP_ADDRESS_LEN 16
-#define START_WINDOW_SIZE 10
-#define IP_ADDRESS_LEN 16
-#define ADVERTISED_WINDOW_SIZE 256
-#define OUTGOING_BUFFER_SIZE 1024
-#define INITIAL_NEXT_SEQUENCE_NUM -111
-
-#define _WINSOCK_DEPRECATED_NO_WARNINGS
-
-/* *** MODULE *** */
+//MODULE AND DEFINE
 #include <string>
 #include <stdint.h>
 #include <stdlib.h>
@@ -20,11 +9,18 @@
 #include <winsock2.h>
 #include "Frame.h"
 
+#define SIZE_OF_SEGMENT 4
+#define IP_ADDRESS_LEN 16
+#define START_WINDOW_SIZE 10
+#define IP_ADDRESS_LEN 16
+#define ADVERTISED_WINDOW_SIZE 256
+#define OUTGOING_BUFFER_SIZE 1024
+#define INITIAL_NEXT_SEQUENCE_NUM -111
+#define _WINSOCK_DEPRECATED_NO_WARNINGS
 
-//using namespace std;
 
-// deo poruke koji se salje
-// unutar jednog sliding windowa imamo nekoliko segmenata
+//STRUCTS
+
 typedef struct {
 	char EOM;
 	int SequenceNumber;
@@ -32,7 +28,6 @@ typedef struct {
 	int Length;
 } Segment;
 
-// struktura ack poruke koju klijent prima od servera
 typedef struct {
 	char ACK;
 	int NextSequenceNumber;
@@ -45,11 +40,11 @@ typedef struct {
 } Control;
 
 
-/* Definition */
+//DEFINITION
 #define DefaultEOM 0x1;
 #define DefaultACK 0x6;
 
-/* Selector */
+//SELECTOR 
 #define EOM(S) ((S).EOM)
 #define SequenceNumber(S) ((S).SequenceNumber)
 #define Data(S) ((S).Data)
@@ -58,6 +53,8 @@ typedef struct {
 #define SIZE_OF_SEGMENT 4
 #define PARAM_X 12
 #define Length(S) ((S).Length)
+
+//CALL OF FUNCTIONS
 
 Segment CreateSegment(int inputSequenceNumber, char inputData[SIZE_OF_SEGMENT], char inputChecksum);
 
@@ -86,4 +83,3 @@ void sendFinalSegment(SOCKET clientSocket, sockaddr_in *serverAddress, int *sock
 int startSending(char* outgoingBuffer, SOCKET clientSocket, sockaddr_in *serverAddress, int *sockAddrLen);
 
 PacketACK sendFinalAck(PacketACK ack, SOCKET serverSocket, sockaddr_in* clientAddress, int sockAddrLen);
-#endif
