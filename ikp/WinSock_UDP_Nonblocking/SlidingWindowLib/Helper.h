@@ -16,7 +16,7 @@
 #define IP_ADDRESS_LEN 16
 #define ADVERTISED_WINDOW_SIZE 256
 #define OUTGOING_BUFFER_SIZE 1024
-#define SHUT_DOWN_BUFFER 10
+#define SHUT_DOWN_BUFFER 1024
 #define INITIAL_NEXT_SEQUENCE_NUM -111
 #define _WINSOCK_DEPRECATED_NO_WARNINGS
 
@@ -38,7 +38,7 @@ typedef struct {
 typedef struct {
 	int windowSize;
 	int SSTresh;
-	bool dozvola;
+	bool permission;
 } Control;
 
 

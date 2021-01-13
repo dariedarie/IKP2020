@@ -134,10 +134,8 @@ int main(int argc, char* argv[])
 		Segment paket;
 		PacketACK ack = CreatePacketACK(INITIAL_NSN);
 		int lastFrameCorrect = 0;
-		// poslednji primljen frejm
 		int LFR = 0;
 		bool first = true;
-		// poslednji frejm za koji je poslat ack
 		int LAF = windowSize;
 		int counterBuffer = 0;
 		int finish = 0;
@@ -185,7 +183,6 @@ int main(int argc, char* argv[])
 				}
 				
 
-				// ako je pristigli paket unutar prozora	
 				if (SequenceNumber(paket) >= LFR && SequenceNumber(paket) <= LAF) {
 					if (SequenceNumber(paket) == LFR) {
 						LFR++;
@@ -210,7 +207,6 @@ int main(int argc, char* argv[])
 			ack = CreatePacketACK(LFR);
 			char *sendBuf = (char *)&ack;
 
-			// da ne bi vise puta poslao ack od prosle poruke
 			novi_ack = NextSequenceNumber(ack);
 			if (novi_ack != stari_ack) {
 				iResult = sendto(serverSocket, sendBuf, sizeof(ack), 0, (LPSOCKADDR)&clientAddress, sockAddrLen);

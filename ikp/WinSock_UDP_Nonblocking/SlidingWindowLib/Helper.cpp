@@ -25,12 +25,12 @@ void createNew(SendingWindow *s, int windowSize) {
 }
 
 
-Control CalculateWinSize(int windowSize, int SSTresh, bool dozvola)
+Control CalculateWinSize(int windowSize, int SSTresh, bool permission)
 {
 	float temp = 0;
 	if (SSTresh != windowSize)
 	{
-		if (dozvola == false)
+		if (permission == false)
 		{
 			if (windowSize == PARAM_X)
 			{
@@ -49,7 +49,7 @@ Control CalculateWinSize(int windowSize, int SSTresh, bool dozvola)
 			temp = (float)(SSTresh)+((float)SSTresh / (float)windowSize);
 			int temp3 = round(temp);
 			windowSize += temp3;
-			dozvola = true;
+			permission = true;
 		}
 	}
 	else
@@ -57,13 +57,13 @@ Control CalculateWinSize(int windowSize, int SSTresh, bool dozvola)
 		temp = (float)(SSTresh)+((float)SSTresh / (float)windowSize);
 		int temp2 = round(temp);
 		windowSize += temp2;
-		dozvola = true;
+		permission = true;
 	}
 
 	Control c;
 	c.SSTresh = SSTresh;
 	c.windowSize = windowSize;
-	c.dozvola = dozvola;
+	c.permission = permission;
 
 	return c;
 }
@@ -249,7 +249,7 @@ int startSending(char* outgoingBuffer, SOCKET clientSocket, sockaddr_in *serverA
 
 	int paramSend = 0;
 	int SSTresh = 0;
-	bool dozvola = false;
+	bool permission = false;
 
 
 	while (1) {
@@ -314,10 +314,10 @@ int startSending(char* outgoingBuffer, SOCKET clientSocket, sockaddr_in *serverA
 				printf("Poslao sam celu poruku\n");
 				strcpy(outgoingBuffer, "");
 				Control c;
-				c = CalculateWinSize(windowSize, SSTresh, dozvola);
+				c = CalculateWinSize(windowSize, SSTresh, permission);
 				windowSize = c.windowSize;
 				SSTresh = c.SSTresh;
-				dozvola = c.dozvola;
+				permission = c.permission;
 
 				break;
 			}
@@ -326,7 +326,7 @@ int startSending(char* outgoingBuffer, SOCKET clientSocket, sockaddr_in *serverA
 
 		sendFinalSegment(clientSocket, serverAddress, sockAddrLen);
 		char negative[SHUT_DOWN_BUFFER];
-		printf("Zelite li da ugasite server(Y/N)?\n");
+		printf("Zelite li da prekinete rad aplikacije(Unesite Y)?\n");
 		gets_s(negative, SHUT_DOWN_BUFFER);
 		if(strcmp(negative,"Y")==0)
 		{
