@@ -2,6 +2,8 @@
 #include <stdio.h>
 #include "MemoryPool.cpp"
 #include "Helper.cpp"
+
+//#include "ServerFunctions.cpp"
 #define _WINSOCK_DEPRECATED_NO_WARNINGS
 #define SERVER_PORT 15000
 #define SERVER_SLEEP_TIME 50
@@ -10,6 +12,7 @@
 #define BUFFER_POOL_SIZE 10000
 #define START_WINDOW_SIZE 10
 #define SEGMENT_SIZE 4
+#define INITIAL_NSN -1111
 
 
 // Initializes WinSock2 library
@@ -85,17 +88,6 @@ int main(int argc, char* argv[])
 
 
 
-	int windowSize = START_WINDOW_SIZE;
-	int recv_len;
-	Segment paket;
-	PacketACK ack;
-	int lastFrameCorrect = 0;
-	int LFR = 0;
-	bool first = true;
-	int LAF = windowSize;
-	int counterBuffer = 0;
-	int finish = 0;
-
 	// Main server loop
 	while (1)
 	{
@@ -136,14 +128,22 @@ int main(int argc, char* argv[])
 			Sleep(SERVER_SLEEP_TIME);
 			continue;
 		}
-		int LFR = 0;
-		int LAF = windowSize;
-		EOM(paket) = 0x1;
-		NextSequenceNumber(ack) = 1;
 
-		int novi_ack = -2;
-		int stari_ack = -12;
-		int neki_brojac = 0;
+		int windowSize = START_WINDOW_SIZE;
+		int recv_len;
+		Segment paket;
+		PacketACK ack = CreatePacketACK(INITIAL_NSN);
+		int lastFrameCorrect = 0;
+		// poslednji primljen frejm
+		int LFR = 0;
+		bool first = true;
+		// poslednji frejm za koji je poslat ack
+		int LAF = windowSize;
+		int counterBuffer = 0;
+		int finish = 0;
+
+		int novi_ack = INITIAL_NSN / 2;
+		int stari_ack = INITIAL_NSN;
 
 		while (1) {
 
@@ -155,34 +155,24 @@ int main(int argc, char* argv[])
 			char * recvBuf = (char *)&paket;
 			if (recvfrom(serverSocket, recvBuf, sizeof(paket), 0, (LPSOCKADDR)&clientAddress, &sockAddrLen) >= 0) {
 				if (EOM(paket) == 0x02) {
-					ack = CreatePacketACK(-1);
-					char *sendBuf = (char *)&ack;
-					iResult = sendto(serverSocket, sendBuf, sizeof(ack), 0, (LPSOCKADDR)&clientAddress, sockAddrLen);
-					printf("Klijent je zavrsio slanje svoje poruke\n");
-					neki_brojac = 0;
+					ack = sendFinalAck(ack, serverSocket, &clientAddress, sockAddrLen);
 					break;
 				}
-				printf("Stigao je paket sa seq_num: %d\n", SequenceNumber(paket));	
+
+				// ako je pristigli paket unutar prozora	
 				if (SequenceNumber(paket) >= LFR && SequenceNumber(paket) <= LAF) {
-					
 					if (SequenceNumber(paket) == LFR) {
 						LFR++;
-						
-						char *mem = (char*)pool_alloc(buffer_pool, SEGMENT_SIZE);
 
-						strcpy(mem, Data(paket));
+						char *mem = (char*)pool_alloc(buffer_pool, Length(paket));
 
-						char ipAddress[IP_ADDRESS_LEN];
-						strcpy_s(ipAddress, sizeof(ipAddress), inet_ntoa(clientAddress.sin_addr));
-						int clientPort = ntohs((u_short)clientAddress.sin_port);
-
-						printf("Client connected from ip: %s, port: %d, sent: %c%c%c%c\n", ipAddress, clientPort, Data(paket)[0], Data(paket)[1], Data(paket)[2], Data(paket)[3]);
-						printf("BUFFER POOL:");
-						for (char *c = buffer_pool->begin; c != buffer_pool->next; c++)
-						{
-							printf("%c", *c);
+						for (int i = 0; i < Length(paket); i++) {
+							mem[i] = Data(paket)[i];
 						}
-						printf("\n");
+
+						printSegment(paket, clientAddress);
+
+						print_pool(buffer_pool);
 
 					}
 				}
@@ -190,11 +180,13 @@ int main(int argc, char* argv[])
 
 			}
 
+
 			ack = CreatePacketACK(LFR);
 			char *sendBuf = (char *)&ack;
+
+			// da ne bi vise puta poslao ack od prosle poruke
 			novi_ack = NextSequenceNumber(ack);
 			if (novi_ack != stari_ack) {
-
 				iResult = sendto(serverSocket, sendBuf, sizeof(ack), 0, (LPSOCKADDR)&clientAddress, sockAddrLen);
 			}
 			stari_ack = NextSequenceNumber(ack);
@@ -227,11 +219,12 @@ int main(int argc, char* argv[])
 		return 1;
 	}
 
-	pool_destroy(buffer_pool);
 	printf("Server successfully shut down.\n");
+	pool_destroy(buffer_pool);
+
 	return 0;
 
-	
+
 }
 
 bool InitializeWindowsSockets()

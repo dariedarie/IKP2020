@@ -1,5 +1,5 @@
 ﻿  Helper.cpp
-c:\users\colak\desktop\ikp\ikp2020\ikp\winsock_udp_nonblocking\slidingwindowlib\helper.cpp(36): warning C4477: 'printf' : format string '%d' requires an argument of type 'int', but variadic argument 1 has type 'int *'
-c:\users\colak\desktop\ikp\ikp2020\ikp\winsock_udp_nonblocking\slidingwindowlib\helper.cpp(49): warning C4244: 'initializing': conversion from 'float' to 'int', possible loss of data
-c:\users\colak\desktop\ikp\ikp2020\ikp\winsock_udp_nonblocking\slidingwindowlib\helper.cpp(59): warning C4244: 'initializing': conversion from 'float' to 'int', possible loss of data
-  SlidingWindowLib.vcxproj -> C:\Users\colak\Desktop\ikp\IKP2020\ikp\WinSock_UDP_Nonblocking\Debug\SlidingWindowLib.lib
+c:\users\colak\desktop\ikp\ikp2020\ikp\winsock_udp_nonblocking\slidingwindowlib\helper.cpp(50): warning C4244: 'initializing': conversion from 'float' to 'int', possible loss of data
+c:\users\colak\desktop\ikp\ikp2020\ikp\winsock_udp_nonblocking\slidingwindowlib\helper.cpp(58): warning C4244: 'initializing': conversion from 'float' to 'int', possible loss of data
+c:\users\colak\desktop\ikp\ikp2020\ikp\winsock_udp_nonblocking\slidingwindowlib\helper.cpp(320): error C4996: 'strcpy': This function or variable may be unsafe. Consider using strcpy_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+  c:\program files (x86)\windows kits\10\include\10.0.17763.0\ucrt\string.h(133): note: see declaration of 'strcpy'

@@ -8,7 +8,7 @@ POOL * pool_create(size_t size) {
 	return p;
 }
 
-void pool_destroy(POOL *p){
+void pool_destroy(POOL *p) {
 	free(p);
 }
 
@@ -21,4 +21,13 @@ void * pool_alloc(POOL *p, size_t size) {
 	void *mem = (void*)p->next;
 	p->next += size;
 	return mem;
+}
+
+void print_pool(POOL *buffer_pool) {
+	printf("BUFFER POOL:");
+	for (char *c = buffer_pool->begin; c != buffer_pool->next; c++)
+	{
+		printf("%c", *c);
+	}
+	printf("\n");
 }
