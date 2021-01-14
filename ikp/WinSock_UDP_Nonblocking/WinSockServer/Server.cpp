@@ -13,11 +13,13 @@
 #define START_WINDOW_SIZE 10
 #define SEGMENT_SIZE 4
 #define INITIAL_NSN -1111
+#define END_OF_PROGRAM -5555
 
 
 // Initializes WinSock2 library
 // Returns true if succeeded, false otherwise.
 bool InitializeWindowsSockets();
+int StartReceiving(POOL *buffer_pool, SOCKET serverSocket, sockaddr_in *clientAddress, int *sockAddrLen);
 
 int main(int argc, char* argv[])
 {
@@ -129,90 +131,10 @@ int main(int argc, char* argv[])
 			continue;
 		}
 
-		int windowSize = START_WINDOW_SIZE;
-		int recv_len;
-		Segment paket;
-		PacketACK ack = CreatePacketACK(INITIAL_NSN);
-		int lastFrameCorrect = 0;
-		int LFR = 0;
-		bool first = true;
-		int LAF = windowSize;
-		int counterBuffer = 0;
-		int finish = 0;
+		iResult = StartReceiving(buffer_pool, serverSocket, &clientAddress, &sockAddrLen);
 
-		int novi_ack = INITIAL_NSN / 2;
-		int stari_ack = INITIAL_NSN;
-
-		while (1) {
-
-			if (NextSequenceNumber(ack) == -1) {
-				break;
-			}
-
-			memset(Data(paket), 0, SEGMENT_SIZE);
-			char * recvBuf = (char *)&paket;
-			if (recvfrom(serverSocket, recvBuf, sizeof(paket), 0, (LPSOCKADDR)&clientAddress, &sockAddrLen) >= 0) {
-				if (EOM(paket) == 0x02) {
-					ack = sendFinalAck(ack, serverSocket, &clientAddress, sockAddrLen);
-					break;
-				}
-				else if(strcmp(recvBuf,"Y")==0)
-				{
-					pool_destroy(buffer_pool);
-					// if we are here, it means that server is shutting down
-					// close socket and unintialize WinSock2 library
-					iResult = closesocket(serverSocket);
-					if (iResult == SOCKET_ERROR)
-					{
-						printf("closesocket failed with error: %d\n", WSAGetLastError());
-						return 1;
-					}
-
-					iResult = WSACleanup();
-					if (iResult == SOCKET_ERROR)
-					{
-						printf("WSACleanup failed with error: %d\n", WSAGetLastError());
-						return 1;
-					}
-
-					printf("Server successfully shut down.\n");
-
-
-					return 0;
-				
-				}
-				
-
-				if (SequenceNumber(paket) >= LFR && SequenceNumber(paket) <= LAF) {
-					if (SequenceNumber(paket) == LFR) {
-						LFR++;
-
-						char *mem = (char*)pool_alloc(buffer_pool, Length(paket));
-
-						for (int i = 0; i < Length(paket); i++) {
-							mem[i] = Data(paket)[i];
-						}
-
-						printSegment(paket, clientAddress);
-
-						print_pool(buffer_pool);
-
-					}
-				}
-				LAF = LFR + windowSize;
-
-			}
-
-
-			ack = CreatePacketACK(LFR);
-			char *sendBuf = (char *)&ack;
-
-			novi_ack = NextSequenceNumber(ack);
-			if (novi_ack != stari_ack) {
-				iResult = sendto(serverSocket, sendBuf, sizeof(ack), 0, (LPSOCKADDR)&clientAddress, sockAddrLen);
-			}
-			stari_ack = NextSequenceNumber(ack);
-
+		if (iResult == END_OF_PROGRAM) {
+			return 0;
 		}
 
 		if (iResult == SOCKET_ERROR)
@@ -220,7 +142,7 @@ int main(int argc, char* argv[])
 			printf("sendto failed with error: %d\n", WSAGetLastError());
 			closesocket(serverSocket);
 			WSACleanup();
-			return 1;
+			return SOCKET_ERROR;
 		}
 
 	}
@@ -260,4 +182,94 @@ bool InitializeWindowsSockets()
 		return false;
 	}
 	return true;
+}
+
+int StartReceiving(POOL *buffer_pool, SOCKET serverSocket, sockaddr_in *clientAddress, int *sockAddrLen) {
+	int windowSize = START_WINDOW_SIZE;
+	int recv_len;
+	Segment paket;
+	PacketACK ack = CreatePacketACK(INITIAL_NSN);
+	int lastFrameCorrect = 0;
+	int LFR = 0;
+	bool first = true;
+	int LAF = windowSize;
+	int counterBuffer = 0;
+	int finish = 0;
+
+	int novi_ack = INITIAL_NSN / 2;
+	int stari_ack = INITIAL_NSN;
+
+	int iResult = 0;
+
+	while (1) {
+
+		if (NextSequenceNumber(ack) == -1) {
+			break;
+		}
+
+		memset(Data(paket), 0, SEGMENT_SIZE);
+		char * recvBuf = (char *)&paket;
+		if (recvfrom(serverSocket, recvBuf, sizeof(paket), 0, (LPSOCKADDR)clientAddress, sockAddrLen) >= 0) {
+			if (EOM(paket) == 0x02) {
+				ack = sendFinalAck(ack, serverSocket, clientAddress, *sockAddrLen);
+				break;
+			}
+			else if (strcmp(recvBuf, "Y") == 0)
+			{
+				pool_destroy(buffer_pool);
+				// if we are here, it means that server is shutting down
+				// close socket and unintialize WinSock2 library
+				int iResult = closesocket(serverSocket);
+				if (iResult == SOCKET_ERROR)
+				{
+					printf("closesocket failed with error: %d\n", WSAGetLastError());
+					return SOCKET_ERROR;
+				}
+
+				iResult = WSACleanup();
+				if (iResult == SOCKET_ERROR)
+				{
+					printf("WSACleanup failed with error: %d\n", WSAGetLastError());
+					return SOCKET_ERROR;
+				}
+
+				printf("Server successfully shut down.\n");
+
+
+				return END_OF_PROGRAM;
+
+			}
+
+
+			if (SequenceNumber(paket) >= LFR && SequenceNumber(paket) <= LAF) {
+				if (SequenceNumber(paket) == LFR) {
+					LFR++;
+
+					char *mem = (char*)pool_alloc(buffer_pool, Length(paket));
+
+					for (int i = 0; i < Length(paket); i++) {
+						mem[i] = Data(paket)[i];
+					}
+
+					printSegment(paket, *clientAddress);
+
+					print_pool(buffer_pool);
+
+				}
+			}
+			LAF = LFR + windowSize;
+
+		}
+
+
+		ack = CreatePacketACK(LFR);
+		char *sendBuf = (char *)&ack;
+
+		novi_ack = NextSequenceNumber(ack);
+		if (novi_ack != stari_ack) {
+			iResult = sendto(serverSocket, sendBuf, sizeof(ack), 0, (LPSOCKADDR)clientAddress, *sockAddrLen);
+		}
+		stari_ack = NextSequenceNumber(ack);
+	}
+	return iResult;
 }

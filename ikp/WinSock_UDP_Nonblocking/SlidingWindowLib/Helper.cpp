@@ -326,7 +326,7 @@ int startSending(char* outgoingBuffer, SOCKET clientSocket, sockaddr_in *serverA
 
 		sendFinalSegment(clientSocket, serverAddress, sockAddrLen);
 		char negative[SHUT_DOWN_BUFFER];
-		printf("Zelite li da prekinete rad aplikacije(Unesite Y)?\n");
+		printf("Zelite li da prekinete rad aplikacije(Unesite Y),za nastavak unesite bilo koji karakter?\n");
 		gets_s(negative, SHUT_DOWN_BUFFER);
 		if(strcmp(negative,"Y")==0)
 		{

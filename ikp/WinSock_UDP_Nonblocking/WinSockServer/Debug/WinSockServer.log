@@ -7,8 +7,8 @@ c:\users\colak\desktop\ikp\ikp2020\ikp\winsock_udp_nonblocking\slidingwindowlib\
   c:\program files (x86)\windows kits\10\include\10.0.17763.0\um\winsock2.h(1849): note: see declaration of 'inet_ntoa'
 c:\users\colak\desktop\ikp\ikp2020\ikp\winsock_udp_nonblocking\slidingwindowlib\helper.cpp(315): warning C4996: 'strcpy': This function or variable may be unsafe. Consider using strcpy_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
   c:\program files (x86)\windows kits\10\include\10.0.17763.0\ucrt\string.h(133): note: see declaration of 'strcpy'
-c:\users\colak\desktop\ikp\ikp2020\ikp\winsock_udp_nonblocking\winsockserver\server.cpp(34): warning C4101: 'sendBuffer': unreferenced local variable
-c:\users\colak\desktop\ikp\ikp2020\ikp\winsock_udp_nonblocking\winsockserver\server.cpp(32): warning C4101: 'alreadyReceived': unreferenced local variable
-c:\users\colak\desktop\ikp\ikp2020\ikp\winsock_udp_nonblocking\winsockserver\server.cpp(133): warning C4101: 'recv_len': unreferenced local variable
+c:\users\colak\desktop\ikp\ikp2020\ikp\winsock_udp_nonblocking\winsockserver\server.cpp(36): warning C4101: 'sendBuffer': unreferenced local variable
+c:\users\colak\desktop\ikp\ikp2020\ikp\winsock_udp_nonblocking\winsockserver\server.cpp(34): warning C4101: 'alreadyReceived': unreferenced local variable
+c:\users\colak\desktop\ikp\ikp2020\ikp\winsock_udp_nonblocking\winsockserver\server.cpp(189): warning C4101: 'recv_len': unreferenced local variable
 c:\users\colak\desktop\ikp\ikp2020\ikp\winsock_udp_nonblocking\slidingwindowlib\helper.cpp(211): warning C4715: 'sendSegment': not all control paths return a value
   WinSockServer.vcxproj -> C:\Users\colak\Desktop\ikp\IKP2020\ikp\WinSock_UDP_Nonblocking\Debug\WinSockServer.exe
