@@ -212,6 +212,7 @@ int StartReceiving(POOL *buffer_pool, SOCKET serverSocket, sockaddr_in *clientAd
 		if (recvfrom(serverSocket, recvBuf, sizeof(paket), 0, (LPSOCKADDR)clientAddress, sockAddrLen) >= 0) {
 			if (EOM(paket) == 0x02) {
 				ack = sendFinalAck(ack, serverSocket, clientAddress, *sockAddrLen);
+				printf("Poslao sam finalni segment\n");
 				break;
 			}
 			else if (strcmp(recvBuf, "Y") == 0)
